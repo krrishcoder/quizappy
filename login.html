@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Quiz App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <form id="loginForm" class="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm">
+    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
+
+    <div class="mb-4">
+      <label for="identifier" class="block text-sm font-medium text-gray-700">Email or Name</label>
+      <input type="text" id="identifier" name="identifier" required class="input-field" />
+    </div>
+
+    <div class="mb-4">
+      <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+      <input type="password" id="password" name="password" required class="input-field" />
+    </div>
+
+    <p id="errorMsg" class="text-red-500 text-sm hidden mb-4">Invalid credentials. Please try again.</p>
+
+    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white w-full py-2 px-4 rounded-xl">
+      Login
+    </button>
+  </form>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const identifier = form.identifier.value;
+      const password = form.password.value;
+
+      const response = await fetch("http://192.168.0.102:3000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      
+      const data = await response.json();
+
+
+      console.log("Response from server:", data);
+
+
+
+      if (data.success) {
+  
+        console.log("Login successful:", response);
+        localStorage.setItem("userName", data.user.name   );
+        localStorage.setItem("userId", data.user._id);
+        window.location.href = "/dashboard.html"; // Or any other protected route
+      } else {
+        errorMsg.classList.remove("hidden");
+        form.identifier.classList.add("border-red-500");
+        form.password.classList.add("border-red-500");
+      }
+    });
+  </script>
+
+  
+
+  <style>
+    .input-field {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .input-field:focus {
+      border-color: #3b82f6;
+    }
+  </style>
+
+  
+</body>
+</html>

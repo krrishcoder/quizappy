@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup - Quiz App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <form id="signupForm" class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Sign Up</h2>
+
+    <!-- Name -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700">Name</label>
+      <input type="text" id="name" name="name" required
+             class="input-field" placeholder="John Doe" />
+      <p id="nameError" class="text-red-500 text-sm hidden">Only letters and spaces allowed.</p>
+    </div>
+
+    <!-- Email -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700">Email</label>
+      <input type="email" id="email" name="email" required
+             class="input-field" placeholder="example@email.com" />
+      <p id="emailError" class="text-red-500 text-sm hidden">Enter a valid email.</p>
+    </div>
+
+    <!-- Password -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700">Password</label>
+      <input type="password" id="password" name="password" required
+             class="input-field" placeholder="Enter password" />
+    </div>
+
+    <!-- Course -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700">Course</label>
+      <input type="text" id="course" name="course" required
+             class="input-field" placeholder="B.Tech / MCA / MSc / BSc" />
+    </div>
+
+    <!-- Error Message -->
+    <p id="signupError" class="text-red-500 text-sm hidden mb-4">Signup failed. Try again.</p>
+
+    <!-- Submit -->
+    <button type="submit"
+            class="bg-green-500 hover:bg-green-600 text-white w-full py-2 px-4 rounded-xl">
+      Sign Up
+    </button>
+  </form>
+
+  <script>
+    const form = document.getElementById("signupForm");
+    const nameField = document.getElementById("name");
+    const emailField = document.getElementById("email");
+    const nameError = document.getElementById("nameError");
+    const emailError = document.getElementById("emailError");
+    const signupError = document.getElementById("signupError");
+
+    // Realtime Name Validation
+    nameField.addEventListener("input", () => {
+      const valid = /^[A-Za-z\s]*$/.test(nameField.value);
+      if (!valid) {
+        nameError.classList.remove("hidden");
+        nameField.classList.add("border-red-500");
+      } else {
+        nameError.classList.add("hidden");
+        nameField.classList.remove("border-red-500");
+      }
+    });
+
+    // Realtime Email Validation
+    emailField.addEventListener("input", () => {
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value);
+      if (!valid) {
+        emailError.classList.remove("hidden");
+        emailField.classList.add("border-red-500");
+      } else {
+        emailError.classList.add("hidden");
+        emailField.classList.remove("border-red-500");
+      }
+    });
+
+    // Submit Handler
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = nameField.value;
+      const email = emailField.value;
+      const password = document.getElementById("password").value;
+      const course = document.getElementById("course").value;
+
+      try {
+        const response = await fetch("http://192.168.0.102:3000/api/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, course }),
+        });
+
+
+        const data = await response.json();
+
+        console.log("Response from server:", data);
+        if (data.success) {
+          localStorage.setItem("userName", data.newUser.name);
+          localStorage.setItem("userId", data.newUser._id);
+          window.location.href = "dashboard.html";
+        } else {
+          signupError.classList.remove("hidden");
+        }
+      } catch (err) {
+        console.error(err);
+        signupError.classList.remove("hidden");
+      }
+    });
+  </script>
+
+  <style>
+    .input-field {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .input-field:focus {
+      border-color: #10b981;
+    }
+  </style>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Quiz App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen font-sans">
+    <div class="max-w-6xl mx-auto py-10 px-4">
+      <!-- Header Section -->
+      <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold text-green-600">
+          Welcome, <span id="username">User</span>!
+        </h1>
+        <button
+          id="logoutBtn"
+          class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+        >
+          Logout
+        </button>
+      </div>
+
+      <!-- Welcome Box -->
+      <div class="bg-white p-8 rounded-2xl shadow text-center mb-10">
+        <!-- Summary Card Section -->
+        <div
+          id="summaryCard"
+          class="bg-white p-6 rounded-2xl shadow mb-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-center"
+        >
+          <div class="bg-green-50 p-4 rounded-xl">
+            <h3 class="text-xl font-semibold text-green-700">Total Quizzes</h3>
+            <p id="totalQuizzes" class="text-3xl font-bold mt-2 text-green-900">
+              0
+            </p>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-xl">
+            <h3 class="text-xl font-semibold text-yellow-700">Average Score</h3>
+            <p id="avgScore" class="text-3xl font-bold mt-2 text-yellow-900">
+              0
+            </p>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-xl">
+            <h3 class="text-xl font-semibold text-blue-700">Highest Score</h3>
+            <p id="maxScore" class="text-3xl font-bold mt-2 text-blue-900">0</p>
+          </div>
+        </div>
+
+        <p class="text-gray-700 text-lg mb-4">Ready to test your skills?</p>
+        <a href="selection.html">
+          <button
+            class="bg-green-500 text-white px-6 py-2 rounded-xl hover:bg-green-600 transition shadow"
+          >
+            Start Quiz
+          </button>
+        </a>
+      </div>
+
+      <!-- Past Performance Section -->
+      <div class="bg-white p-8 rounded-2xl shadow">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800">
+          Past Performances
+        </h2>
+        <div id="performanceTable" class="overflow-x-auto">
+          <table class="w-full table-auto border-collapse">
+            <thead>
+              <tr class="bg-gray-200 text-gray-700 text-sm">
+                <th class="py-2 px-3 text-left">Topic</th>
+                <th class="py-2 px-3 text-left">Score</th>
+                <th class="py-2 px-3 text-left">Difficulty</th>
+                <th class="py-2 px-3 text-left">Date</th>
+                <th class="py-2 px-3 text-left">View</th>
+              </tr>
+            </thead>
+            <tbody id="performanceBody" class="text-sm">
+              <!-- JS will populate here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal to show quiz questions -->
+    <div
+      id="modal"
+      class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50"
+    >
+      <div
+        class="bg-white w-full max-w-2xl p-6 rounded-xl shadow-lg relative max-h-[80vh] overflow-y-auto"
+      >
+        <h3 class="text-xl font-bold mb-4">Quiz Questions</h3>
+        <div id="modalContent" class="space-y-3"></div>
+        <button
+          onclick="closeModal()"
+          class="absolute top-2 right-4 text-xl text-gray-500 hover:text-black"
+        >
+          &times;
+        </button>
+      </div>
+    </div>
+
+    <script>
+
+//==========================================================================================================================================================================================
+async function getScoresByUserId(userId) {
+  if (!userId) {
+    console.error("User ID is required.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://192.168.0.102:3000/api/scores?userId=${userId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const scores = await response.json();
+    console.log("Fetched scores:", scores);
+
+    // Optional: Render scores in the UI
+    // renderScores(scores);
+
+    return scores;
+  } catch (error) {
+    console.error("Failed to fetch scores:", error);
+  }
+}
+
+const userName = localStorage.getItem("userName") || "User";
+const userId = localStorage.getItem("userId");
+const userId1 = userId; // Replace with dynamic user ID if needed
+console.log("User ID:", userId1);
+const scores =  getScoresByUserId(userId1);
+console.log(scores);
+      
+
+//==========================================================================================================================================================================================
+
+
+
+  
+      document.getElementById("username").textContent = userName;
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.clear();
+        window.location.href = "index.html"; // or login.html
+      });
+
+     
+
+
+
+
+
+
+
+      // Fetch performances
+      // Fetch performances
+async function fetchPerformance() {
+  try {
+    const scores = await getScoresByUserId(userId1); // fetch fresh scores
+    const tbody = document.getElementById("performanceBody");
+    tbody.innerHTML = "";
+
+    if (!scores || scores.length === 0) {
+      document.getElementById("totalQuizzes").textContent = "0";
+      document.getElementById("avgScore").textContent = "0.0";
+      document.getElementById("maxScore").textContent = "0";
+
+      tbody.innerHTML = `<tr>
+        <td colspan="5" class="text-center py-6 text-gray-500">
+          You haven’t taken any quiz yet. Come on, start testing your skills now!
+        </td>
+      </tr>`;
+      return;
+    }
+
+    // Stats summary
+    document.getElementById("totalQuizzes").textContent = scores.length;
+    const totalScore = scores.reduce((sum, q) => sum + q.score, 0);
+    const maxScore = Math.max(...scores.map((q) => q.score));
+    document.getElementById("avgScore").textContent = (totalScore / scores.length).toFixed(1);
+    document.getElementById("maxScore").textContent = maxScore;
+
+    // Store for viewQuestions
+    window.quizData = scores;
+
+    scores.forEach((quiz, index) => {
+      const tr = document.createElement("tr");
+      tr.classList.add("border-b");
+
+      const difficultyClass = {
+        easy: "text-green-600 font-semibold",
+        medium: "text-yellow-600 font-semibold",
+        hard: "text-red-600 font-semibold",
+      };
+
+      tr.innerHTML = `
+        <td class="py-2 px-3">${quiz.topic}</td>
+        <td class="py-2 px-3">${quiz.score} / ${quiz.total}</td>
+        <td class="py-2 px-3 ${difficultyClass[quiz.difficulty.toLowerCase()] || ""}">
+          ${quiz.difficulty}
+        </td>
+        <td class="py-2 px-3">${new Date(quiz.datetime).toLocaleString()}</td>
+        <td class="py-2 px-3">
+          <button onclick="viewQuestions(${index})" class="text-blue-600 hover:underline text-sm">View</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Failed to fetch performance:", err);
+  }
+}
+
+
+
+
+      function viewQuestions(index) {
+        const questions = window.quizData[index].questions || [];
+        const container = document.getElementById("modalContent");
+        container.innerHTML = "";
+
+        if (questions.length === 0) {
+          container.innerHTML = "<p>No questions found.</p>";
+        } else {
+          questions.forEach((q, i) => {
+            const div = document.createElement("div");
+            div.innerHTML = `<p><strong>Q${i + 1}:</strong> ${q}</p>`;
+            container.appendChild(div);
+          });
+        }
+
+        document.getElementById("modal").classList.remove("hidden");
+      }
+
+      function closeModal() {
+        document.getElementById("modal").classList.add("hidden");
+      }
+
+      fetchPerformance();
+
+      
+    </script>
+  </body>
+</html>
