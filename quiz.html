@@ -39,7 +39,7 @@
 
     
         // Construct the URL with query parameters
-        const apiUrl = `http://192.168.0.102:3000/api/ask-ai?difficulty=${encodeURIComponent(difficulty)}&topic=${encodeURIComponent(topic)}`;
+        const apiUrl = `https://quiz-app-backend-k6il.onrender.com/api/ask-ai?difficulty=${encodeURIComponent(difficulty)}&topic=${encodeURIComponent(topic)}`;
     
         // Send a GET request with the parameters
         fetch(apiUrl)
