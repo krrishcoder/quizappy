@@ -54,7 +54,7 @@
         console.log("Login successful:", response);
         localStorage.setItem("userName", data.user.name   );
         localStorage.setItem("userId", data.user._id);
-        window.location.href = "/dashboard.html"; // Or any other protected route
+        window.location.href = "https://krrishcoder.github.io/quiz_app_frontend/dashboard.html"; // Or any other protected route
       } else {
         errorMsg.classList.remove("hidden");
         form.identifier.classList.add("border-red-500");
