@@ -25,6 +25,7 @@
     const savedDifficulty = localStorage.getItem('quizDifficulty');
     const savedTopic = localStorage.getItem('quizTopic');
 
+    //====================================================================================
     async function submitScore(userId, topic, score, total, difficulty) {
       try {
         const response = await fetch("http://localhost:3000/api/submit-score", {
@@ -47,6 +48,10 @@
         alert("🚨 Network or server error while submitting score.");
       }
     }
+
+//====================================================================================
+
+
 
     if (userId && savedTopic && score && total && savedDifficulty) {
       submitScore(userId, savedTopic, parseInt(score), parseInt(total), savedDifficulty);

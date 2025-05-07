@@ -1,148 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body>
-   
-
-    <div id="loading" style="display: none;">Loading...</div>
 
 
-
-    <div class="max-w-4xl mx-auto space-y-8">
-        <h1 class="text-3xl font-bold text-center mb-8"> </h1>
-        <div id="quiz-container" class="space-y-6"></div>
-      </div>
-
-
-    <script>
-        // Show the loading message
-        const loadingElement = document.getElementById('loading');
-        loadingElement.style.display = 'block';  // Show loading message
-    
-        const urlParams = new URLSearchParams(window.location.search);
-        const difficulty = urlParams.get('difficulty');
-        const topic = urlParams.get('topic');
-
-        if (difficulty && topic) {
-  localStorage.setItem('quizDifficulty', difficulty);
-  localStorage.setItem('quizTopic', topic);
-}
-
-       // document.getElementById("main-heading").textContent = topic;
+  <div id="loading" style="display: none;">Loading...</div>
 
 
 
-    
-        // Construct the URL with query parameters
-        const apiUrl = `http://192.168.0.102:3000/api/ask-ai?difficulty=${encodeURIComponent(difficulty)}&topic=${encodeURIComponent(topic)}`;
-    
-        // Send a GET request with the parameters
-        fetch(apiUrl)
-            .then(response => response.json())  // Assuming the response is JSON
-            .then(data => {
-                console.log('Response from API:', data);
-    
-                // Hide the loading message once the response is received
-                loadingElement.style.display = 'none';
+  <div class="max-w-4xl mx-auto space-y-8">
+    <h1 class="text-3xl font-bold text-center mb-8"> </h1>
+    <div id="quiz-container" class="space-y-6"></div>
+  </div>
 
 
-                const quizContainer = document.getElementById("quiz-container");
+  <script>
+    // Show the loading message
+    const loadingElement = document.getElementById('loading');
+    loadingElement.style.display = 'block';  // Show loading message
 
-  data.forEach((q, index) => {
-  const card = document.createElement("div");
-  card.className = "bg-white rounded-2xl shadow-md p-6";
+    const urlParams = new URLSearchParams(window.location.search);
+    const difficulty = urlParams.get('difficulty');
+    const topic = urlParams.get('topic');
+    const userId = localStorage.getItem("userId");
 
-  const question = document.createElement("h2");
-  question.className = "text-xl font-semibold mb-4";
-  question.innerText = `${index + 1}. ${q.question}`;
+    let userResponses;
 
+    if (difficulty && topic) {
+      localStorage.setItem('quizDifficulty', difficulty);
+      localStorage.setItem('quizTopic', topic);
+    }
 
-  const options = document.createElement("div");
-  options.className = "grid grid-cols-1 gap-2 mb-4";
-
-  q.options.forEach((opt, optIndex) => {
-    const label = document.createElement("label");
-    label.className = "flex items-center gap-2 cursor-pointer";
-
-    const input = document.createElement("input");
-    input.type = "radio";
-    input.name = `question-${index}`;
-   // input.value = String.fromCharCode(65 + optIndex);
-    input.value = opt;
-    input.className = `accent-blue-600 disabled:cursor-not-allowed`;
-
-    label.appendChild(input);
-    label.appendChild(document.createTextNode(`${String.fromCharCode(65 + optIndex)}. ${opt}`));
-
-    options.appendChild(label);
-  });
-
-  card.appendChild(question);
-  card.appendChild(options);
-  quizContainer.appendChild(card);
-});
-
-// ✅ Add submit button
-const submitBtn = document.createElement("button");
-submitBtn.innerText = "Submit";
-submitBtn.className = "mt-6 bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition-all";
-submitBtn.addEventListener("click", () => {
-  const confirmed = confirm("Are you sure you want to submit your answers?");
-  if (confirmed) {
-    // Disable all radio buttons
-    const allRadios = quizContainer.querySelectorAll("input[type=radio]");
-    allRadios.forEach(r => r.disabled = true);
-
-    submitBtn.disabled = true;
-    submitBtn.classList.add("opacity-50", "cursor-not-allowed");
-    // Store score in localStorage (example only)
-let score = 0;
-data.forEach((q, i) => {
-  const selected = quizContainer.querySelector(`input[name="question-${i}"]:checked`);
-
- 
-  if (selected && selected.value === q.answer) {
-    score++;
-    console.log("Correct answer");
-  }
-  console.log(q.answer)
-  console.log("current score", score)
-  localStorage.setItem("quizScore", score);
-  localStorage.setItem("totalQuestions", data.length);
-
-});
+    // document.getElementById("main-heading").textContent = topic;
 
 
 
-// Redirect to results page
-window.location.href = "results.html";
 
-  }
-});
-
-quizContainer.appendChild(submitBtn);
+    // Construct the URL with query parameters
+    const apiUrl = `http://localhost:3000/api/ask-ai?difficulty=${encodeURIComponent(difficulty)}&topic=${encodeURIComponent(topic)}`;
 
 
 
-            })
-    .catch(error => {
-                console.error('Error:', error);
-    
-                // Hide the loading message in case of an error
-                loadingElement.style.display = 'none';
+
+    // Send a GET request with the parameters
+    fetch(apiUrl)
+      .then(response => response.json())  // Assuming the response is JSON
+      .then(data => {
+        console.log('Response from API:', data);
+
+        // Hide the loading message once the response is received
+        loadingElement.style.display = 'none';
+        userResponses = data;
+
+
+        const quizContainer = document.getElementById("quiz-container");
+
+        data.forEach((q, index) => {
+          const card = document.createElement("div");
+          card.className = "bg-white rounded-2xl shadow-md p-6";
+
+          const question = document.createElement("h2");
+          question.className = "text-xl font-semibold mb-4";
+          question.innerText = `${index + 1}. ${q.question}`;
+
+
+          const options = document.createElement("div");
+          options.className = "grid grid-cols-1 gap-2 mb-4";
+
+          q.options.forEach((opt, optIndex) => {
+            const label = document.createElement("label");
+            label.className = "flex items-center gap-2 cursor-pointer";
+
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = `question-${index}`;
+            // input.value = String.fromCharCode(65 + optIndex);
+            input.value = opt;
+            input.className = `accent-blue-600 disabled:cursor-not-allowed`;
+
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(`${String.fromCharCode(65 + optIndex)}. ${opt}`));
+
+            options.appendChild(label);
+          });
+
+          card.appendChild(question);
+          card.appendChild(options);
+          quizContainer.appendChild(card);
+        });
+
+        //===================================================================================
+
+        // ✅ Add submit button
+        const submitBtn = document.createElement("button");
+        submitBtn.innerText = "Submit";
+        submitBtn.className = "mt-6 bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition-all";
+
+
+        submitBtn.addEventListener("click", () => {
+          const confirmed = confirm("Are you sure you want to submit your answers?");
+          if (confirmed) {
+            // Disable all radio buttons
+            const allRadios = quizContainer.querySelectorAll("input[type=radio]");
+            allRadios.forEach(r => r.disabled = true);
+
+            submitBtn.disabled = true;
+            submitBtn.classList.add("opacity-50", "cursor-not-allowed");
+            // Store score in localStorage (example only)
+            let score = 0;
+            data.forEach((q, i) => {
+              const selected = quizContainer.querySelector(`input[name="question-${i}"]:checked`);
+
+
+              if (selected && selected.value === q.answer) {
+                score++;
+              
+              }
+           
+              
+              localStorage.setItem("quizScore", score);
+              localStorage.setItem("totalQuestions", data.length);
+
             });
 
 
+            if (userId && topic && score && userResponses.length && difficulty) {
 
 
-    
-    </script>
+              console.log(userResponses,userId)
+             submitScore(userId, topic, parseInt(score), parseInt(userResponses.length), difficulty,userResponses);
+            }
+
+
+
+            // Redirect to results page
+           window.location.href = "results.html";
+
+          }
+        });
+
+
+
+        //==============================================================
+
+        quizContainer.appendChild(submitBtn);
+
+
+
+      })
+
+      .catch(error => {
+        console.error('Error:', error);
+
+        // Hide the loading message in case of an error
+        loadingElement.style.display = 'none';
+      });
+
+
+
+
+    //====================================================================================
+    async function submitScore(userId, topic, score, total, difficulty,data) {
+
+      console.log(data)
+      try {
+        const response = await fetch("http://localhost:3000/api/submit-score", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            userId,
+            topic,
+            score,
+            total: data.length,
+            difficulty,
+            questionSet: data,        // full questions with options and correct answers
+            responses:[]  // array of selected answers
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log("Saved result:", data.result);
+        } else {
+          alert("❌ Failed to submit score: " + data.error);
+        }
+      } catch (error) {
+        console.error("Error submitting score:", error);
+        alert("🚨 Network or server error while submitting score.");
+      }
+    }
+
+    //====================================================================================
+
+
+
+
+
+
+
+
+
+  </script>
 
 
 </body>
+
 </html>

@@ -109,7 +109,7 @@ async function getScoresByUserId(userId) {
   }
 
   try {
-    const response = await fetch(`http://192.168.0.102:3000/api/scores?userId=${userId}`);
+    const response = await fetch(`http://localhost:3000/api/scores?userId=${userId}`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -131,8 +131,10 @@ const userName = localStorage.getItem("userName") || "User";
 const userId = localStorage.getItem("userId");
 const userId1 = userId; // Replace with dynamic user ID if needed
 console.log("User ID:", userId1);
-const scores =  getScoresByUserId(userId1);
-console.log(scores);
+(async () => {
+  const scores = await getScoresByUserId(userId1);
+  console.log(scores);
+})();
       
 
 //==========================================================================================================================================================================================
@@ -148,14 +150,6 @@ console.log(scores);
       });
 
      
-
-
-
-
-
-
-
-      // Fetch performances
       // Fetch performances
 async function fetchPerformance() {
   try {
@@ -189,6 +183,7 @@ async function fetchPerformance() {
     scores.forEach((quiz, index) => {
       const tr = document.createElement("tr");
       tr.classList.add("border-b");
+      tr.setAttribute("data-quiz-id", quiz._id); // Store quiz ID for later use
 
       const difficultyClass = {
         easy: "text-green-600 font-semibold",
@@ -198,13 +193,13 @@ async function fetchPerformance() {
 
       tr.innerHTML = `
         <td class="py-2 px-3">${quiz.topic}</td>
-        <td class="py-2 px-3">${quiz.score} / ${quiz.total}</td>
+        <td class="py-2 px-3">${quiz.score} / ${quiz.questions?.length || 10}</td>
         <td class="py-2 px-3 ${difficultyClass[quiz.difficulty.toLowerCase()] || ""}">
           ${quiz.difficulty}
         </td>
-        <td class="py-2 px-3">${new Date(quiz.datetime).toLocaleString()}</td>
+        <td class="py-2 px-3">${new Date(quiz.date).toLocaleString()}</td>
         <td class="py-2 px-3">
-          <button onclick="viewQuestions(${index})" class="text-blue-600 hover:underline text-sm">View</button>
+          <button onclick="viewQuestions('${quiz._id}')" class="text-blue-600 hover:underline text-sm">View</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -217,27 +212,66 @@ async function fetchPerformance() {
 
 
 
-      function viewQuestions(index) {
-        const questions = window.quizData[index].questions || [];
-        const container = document.getElementById("modalContent");
-        container.innerHTML = "";
+async function viewQuestions(quizId) {
+  try {
+    const response = await fetch(`http://localhost:3000/api/quiz/${quizId}`);
+    if (!response.ok) throw new Error('Failed to fetch quiz data');
 
-        if (questions.length === 0) {
-          container.innerHTML = "<p>No questions found.</p>";
-        } else {
-          questions.forEach((q, i) => {
-            const div = document.createElement("div");
-            div.innerHTML = `<p><strong>Q${i + 1}:</strong> ${q}</p>`;
-            container.appendChild(div);
-          });
-        }
+    const quiz = await response.json();
+    const questions = quiz.questions;
+    const userAnswers = quiz.responses || []; // assuming `responses` array is part of quiz object
 
-        document.getElementById("modal").classList.remove("hidden");
-      }
+    const container = document.getElementById("modalContent");
+    container.innerHTML = "";
 
-      function closeModal() {
-        document.getElementById("modal").classList.add("hidden");
-      }
+    if (!questions.length) {
+      container.innerHTML = "<p>No questions found.</p>";
+    } else {
+      questions.forEach((q, i) => {
+        const div = document.createElement("div");
+        div.classList.add("mb-4", "p-4", "border", "rounded-lg");
+
+        const userAnswer = userAnswers[i];
+
+        div.innerHTML = `
+          <p class="font-semibold">Q${i + 1}: ${q.question}</p>
+          <ul class="list-disc ml-6 mt-1 space-y-1">
+            ${q.options
+              .map((opt) => {
+                const isCorrect = opt === q.answer;
+                const isUserSelected = opt === userAnswer;
+
+                return `<li class="${isCorrect ? 'text-green-600 font-semibold' : isUserSelected ? 'text-red-600' : ''}">
+                    ${opt} ${isCorrect ? '✅' : ''} ${isUserSelected && !isCorrect ? '❌ (Your answer)' : ''}
+                  </li>`;
+              })
+              .join("")}
+          </ul>
+        `;
+        container.appendChild(div);
+      });
+
+      // Add Reattempt Button
+      const reattemptBtn = document.createElement("button");
+      reattemptBtn.innerText = "Reattempt Quiz";
+      reattemptBtn.className = "mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700";
+      reattemptBtn.addEventListener("click", () => {
+        localStorage.setItem("quizTopic", quiz.topic);
+        localStorage.setItem("quizDifficulty", quiz.difficulty);
+        window.location.href = "quiz.html";
+      });
+
+      container.appendChild(reattemptBtn);
+    }
+
+    document.getElementById("modal").classList.remove("hidden");
+
+  } catch (err) {
+    console.error("Error loading quiz questions:", err);
+  }
+}
+
+
 
       fetchPerformance();
 
