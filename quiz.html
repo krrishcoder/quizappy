@@ -7,142 +7,166 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-   
-
     <div id="loading" style="display: none;">Loading...</div>
 
-
-
     <div class="max-w-4xl mx-auto space-y-8">
-        <h1 class="text-3xl font-bold text-center mb-8"> </h1>
+        <h1 class="text-3xl font-bold text-center mb-8"></h1>
         <div id="quiz-container" class="space-y-6"></div>
-      </div>
-
+    </div>
 
     <script>
         // Show the loading message
         const loadingElement = document.getElementById('loading');
         loadingElement.style.display = 'block';  // Show loading message
-    
+
         const urlParams = new URLSearchParams(window.location.search);
         const difficulty = urlParams.get('difficulty');
         const topic = urlParams.get('topic');
 
         if (difficulty && topic) {
-  localStorage.setItem('quizDifficulty', difficulty);
-  localStorage.setItem('quizTopic', topic);
-}
+            localStorage.setItem('quizDifficulty', difficulty);
+            localStorage.setItem('quizTopic', topic);
+        }
 
-       // document.getElementById("main-heading").textContent = topic;
-
-
-
-    
         // Construct the URL with query parameters
-        const apiUrl = `https://quiz-app-backend-k6il.onrender.com/api/ask-ai?difficulty=${encodeURIComponent(difficulty)}&topic=${encodeURIComponent(topic)}`;
-    
+        const apiUrl = `http://localhost:3000/api/ask-ai?difficulty=${encodeURIComponent(difficulty)}&topic=${encodeURIComponent(topic)}`;
+
         // Send a GET request with the parameters
         fetch(apiUrl)
             .then(response => response.json())  // Assuming the response is JSON
             .then(data => {
                 console.log('Response from API:', data);
-    
+
                 // Hide the loading message once the response is received
                 loadingElement.style.display = 'none';
 
-
                 const quizContainer = document.getElementById("quiz-container");
+                const userResponses = {}; // Object to store user responses
 
-  data.forEach((q, index) => {
-  const card = document.createElement("div");
-  card.className = "bg-white rounded-2xl shadow-md p-6";
+                data.forEach((q, index) => {
+                    const card = document.createElement("div");
+                    card.className = "bg-white rounded-2xl shadow-md p-6";
 
-  const question = document.createElement("h2");
-  question.className = "text-xl font-semibold mb-4";
-  question.innerText = `${index + 1}. ${q.question}`;
+                    const question = document.createElement("h2");
+                    question.className = "text-xl font-semibold mb-4";
+                    question.innerText = `${index + 1}. ${q.question}`;
+
+                    const options = document.createElement("div");
+                    options.className = "grid grid-cols-1 gap-2 mb-4";
+
+                    q.options.forEach((opt, optIndex) => {
+                        const label = document.createElement("label");
+                        label.className = "flex items-center gap-2 cursor-pointer";
+
+                        const input = document.createElement("input");
+                        input.type = "radio";
+                        input.name = `question-${index}`;
+                        input.value = opt;
+                        input.className = `accent-blue-600 disabled:cursor-not-allowed`;
+
+                        // Add an event listener to track user selection
+                        input.addEventListener('change', () => {
+                            userResponses[`question-${index}`] = {
+                                selected: opt,
+                                attempted: true
+                            };
+                        });
+
+                        label.appendChild(input);
+                        label.appendChild(document.createTextNode(`${String.fromCharCode(65 + optIndex)}. ${opt}`));
+
+                        options.appendChild(label);
+                    });
+
+                    card.appendChild(question);
+                    card.appendChild(options);
+                    quizContainer.appendChild(card);
+                });
+
+                // Add submit button
+                const submitBtn = document.createElement("button");
+                submitBtn.innerText = "Submit";
+                submitBtn.className = "mt-6 bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition-all";
+                submitBtn.addEventListener("click", () => {
+                    const confirmed = confirm("Are you sure you want to submit your answers?");
+                    if (confirmed) {
+                        // Disable all radio buttons
+                        const allRadios = quizContainer.querySelectorAll("input[type=radio]");
+                        allRadios.forEach(r => r.disabled = true);
+
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+                        // Calculate score
+                        let score = 0;
+                        data.forEach((q, i) => {
+                            const selected = quizContainer.querySelector(`input[name="question-${i}"]:checked`);
+                            if (selected && selected.value === q.answer) {
+                                score++;
+                            }
+                            // Store attempted questions
+                            userResponses[`question-${i}`] = {
+                                selected: selected ? selected.value : null,
+                                attempted: !!selected
+                            };
+                        });
+
+                        // Prepare questions and options for saving
+                        let questionsWithOptions = data.map((q, i) => ({
+                            question: q.question,
+                            options: q.options, // Ensure options are included correctly
+                            selected: userResponses[`question-${i}`].selected,
+                             answer: q.answer  // <-- Include the correct answer
+                        }));
 
 
-  const options = document.createElement("div");
-  options.className = "grid grid-cols-1 gap-2 mb-4";
-
-  q.options.forEach((opt, optIndex) => {
-    const label = document.createElement("label");
-    label.className = "flex items-center gap-2 cursor-pointer";
-
-    const input = document.createElement("input");
-    input.type = "radio";
-    input.name = `question-${index}`;
-   // input.value = String.fromCharCode(65 + optIndex);
-    input.value = opt;
-    input.className = `accent-blue-600 disabled:cursor-not-allowed`;
-
-    label.appendChild(input);
-    label.appendChild(document.createTextNode(`${String.fromCharCode(65 + optIndex)}. ${opt}`));
-
-    options.appendChild(label);
-  });
-
-  card.appendChild(question);
-  card.appendChild(options);
-  quizContainer.appendChild(card);
-});
-
-// ✅ Add submit button
-const submitBtn = document.createElement("button");
-submitBtn.innerText = "Submit";
-submitBtn.className = "mt-6 bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition-all";
-submitBtn.addEventListener("click", () => {
-  const confirmed = confirm("Are you sure you want to submit your answers?");
-  if (confirmed) {
-    // Disable all radio buttons
-    const allRadios = quizContainer.querySelectorAll("input[type=radio]");
-    allRadios.forEach(r => r.disabled = true);
-
-    submitBtn.disabled = true;
-    submitBtn.classList.add("opacity-50", "cursor-not-allowed");
-    // Store score in localStorage (example only)
-let score = 0;
-data.forEach((q, i) => {
-  const selected = quizContainer.querySelector(`input[name="question-${i}"]:checked`);
-
- 
-  if (selected && selected.value === q.answer) {
-    score++;
-    console.log("Correct answer");
-  }
-  console.log(q.answer)
-  console.log("current score", score)
-  localStorage.setItem("quizScore", score);
-  localStorage.setItem("totalQuestions", data.length);
-
-});
 
 
 
-// Redirect to results page
-window.location.href = "https://krrishcoder.github.io/quizappy/results.html";
+                        console.log('User Responses:', questionsWithOptions);
 
-  }
-});
+                        // Send userResponses to the backend
+                        fetch('http://localhost:3000/api/save-responses', { // Use full URL for local development
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
 
-quizContainer.appendChild(submitBtn);
+                                userId: localStorage.getItem('userId'), // Assuming userId is stored in localStorage
+                                topic: topic,
+                                difficulty: difficulty,
+                                questions: questionsWithOptions, // Include questions and options
+                                score: score,
+                                totalQuestions: data.length
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(result => {
+                            console.log('Response from backend:', result);
+                            // Redirect to results page
+                          //  window.location.href = "./results.html";
+                        })
+                        .catch(error => {
+                            console.error('Error saving responses:', error);
+                            alert('There was an error saving your responses. Please try again.');
+                        });
+                    }
+                });
 
-
-
+                quizContainer.appendChild(submitBtn);
             })
-    .catch(error => {
+            .catch(error => {
                 console.error('Error:', error);
-    
                 // Hide the loading message in case of an error
                 loadingElement.style.display = 'none';
+                alert('There was an error fetching the quiz data. Please try again.');
             });
-
-
-
-
-    
     </script>
-
-
 </body>
 </html>

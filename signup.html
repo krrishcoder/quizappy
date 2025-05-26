@@ -92,7 +92,7 @@
       const course = document.getElementById("course").value;
 
       try {
-        const response = await fetch("https://quiz-app-backend-k6il.onrender.com/api/signup", {
+        const response = await fetch("http://localhost:3000/api/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password, course }),
@@ -105,7 +105,7 @@
         if (data.success) {
           localStorage.setItem("userName", data.newUser.name);
           localStorage.setItem("userId", data.newUser._id);
-          window.location.href = "https://krrishcoder.github.io/quizappy/dashboard.html";
+          window.location.href = "/quizappy/dashboard.html";
         } else {
           signupError.classList.remove("hidden");
         }
