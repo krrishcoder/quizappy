@@ -28,7 +28,7 @@
     // Event listener for anonymous login
     document.getElementById("anonymousLogin").addEventListener("click", async () => {
       try {
-        const response = await fetch("http://localhost:3000/login/anonymous", {
+        const response = await fetch("https://quiz-app-backend-k6il.onrender.com/login/anonymous", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -29,7 +29,7 @@
         }
 
         // Construct the URL with query parameters
-        const apiUrl = `http://localhost:3000/api/ask-ai?difficulty=${encodeURIComponent(difficulty)}&topic=${encodeURIComponent(topic)}`;
+        const apiUrl = `https://quiz-app-backend-k6il.onrender.com/api/ask-ai?difficulty=${encodeURIComponent(difficulty)}&topic=${encodeURIComponent(topic)}`;
 
         // Send a GET request with the parameters
         fetch(apiUrl)
@@ -129,7 +129,7 @@
                         console.log('User Responses:', questionsWithOptions);
 
                         // Send userResponses to the backend
-                        fetch('http://localhost:3000/api/save-responses', { // Use full URL for local development
+                        fetch('https://quiz-app-backend-k6il.onrender.com/api/save-responses', { // Use full URL for local development
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'

@@ -130,7 +130,7 @@
         }
 
         try {
-          const response = await fetch(`http://localhost:3000/api/scores?userId=${userId}`);
+          const response = await fetch(`https://quiz-app-backend-k6il.onrender.com/api/scores?userId=${userId}`);
           
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -218,7 +218,7 @@
       // Fetch leaderboard data
       async function fetchLeaderboard() {
         try {
-          const response = await fetch(`http://localhost:3000/api/leaderboard`);
+          const response = await fetch(`https://quiz-app-backend-k6il.onrender.com/api/leaderboard`);
           
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
