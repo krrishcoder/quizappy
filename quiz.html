@@ -111,6 +111,9 @@
                             };
                         });
 
+                         localStorage.setItem("quizScore", score );
+                          localStorage.setItem("totalQuestions", data.length);
+
                         // Prepare questions and options for saving
                         let questionsWithOptions = data.map((q, i) => ({
                             question: q.question,
@@ -150,7 +153,7 @@
                         .then(result => {
                             console.log('Response from backend:', result);
                             // Redirect to results page
-                          //  window.location.href = "./results.html";
+                             window.location.href = "./results.html";
                         })
                         .catch(error => {
                             console.error('Error saving responses:', error);

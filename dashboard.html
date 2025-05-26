@@ -11,7 +11,7 @@
       <!-- Header Section -->
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-3xl font-bold text-green-600">
-          Welcome, <span id="username">User</span>!
+          Welcome, <span id="username">User </span>!
         </h1>
         <button
           id="logoutBtn"
@@ -57,7 +57,7 @@
       </div>
 
       <!-- Past Performance Section -->
-      <div class="bg-white p-8 rounded-2xl shadow">
+      <div class="bg-white p-8 rounded-2xl shadow mb-10">
         <h2 class="text-2xl font-semibold mb-6 text-gray-800">
           Past Performances
         </h2>
@@ -73,6 +73,28 @@
               </tr>
             </thead>
             <tbody id="performanceBody" class="text-sm">
+              <!-- JS will populate here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Leaderboard Section -->
+      <div class="bg-white p-8 rounded-2xl shadow">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800">
+          Leaderboard
+        </h2>
+        <div id="leaderboardTable" class="overflow-x-auto">
+          <table class="w-full table-auto border-collapse">
+            <thead>
+              <tr class="bg-gray-200 text-gray-700 text-sm">
+                <th class="py-2 px-3 text-left">Topic</th>
+                <th class="py-2 px-3 text-left">User </th>
+                <th class="py-2 px-3 text-left">Score</th>
+                <th class="py-2 px-3 text-left">Date</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody" class="text-sm">
               <!-- JS will populate here -->
             </tbody>
           </table>
@@ -100,122 +122,135 @@
     </div>
 
     <script>
+      // Fetch scores by user ID
+      async function getScoresByUserId(userId) {
+        if (!userId) {
+          console.error("User  ID is required.");
+          return;
+        }
 
-//==========================================================================================================================================================================================
-async function getScoresByUserId(userId) {
-  if (!userId) {
-    console.error("User ID is required.");
-    return;
-  }
+        try {
+          const response = await fetch(`http://localhost:3000/api/scores?userId=${userId}`);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
 
-  try {
-    const response = await fetch(`https://quiz-app-backend-k6il.onrender.com/api/scores?userId=${userId}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+          const scores = await response.json();
+          console.log("Fetched scores:", scores);
+          return scores;
+        } catch (error) {
+          console.error("Failed to fetch scores:", error);
+        }
+      }
 
-    const scores = await response.json();
-    console.log("Fetched scores:", scores);
+      const userName = localStorage.getItem("userName") || "User ";
+      const userId = localStorage.getItem("userId");
+      console.log("User  ID:", userId);
+      const scores = getScoresByUserId(userId);
+      console.log(scores);
 
-    // Optional: Render scores in the UI
-    // renderScores(scores);
-
-    return scores;
-  } catch (error) {
-    console.error("Failed to fetch scores:", error);
-  }
-}
-
-const userName = localStorage.getItem("userName") || "User";
-const userId = localStorage.getItem("userId");
-const userId1 = userId; // Replace with dynamic user ID if needed
-console.log("User ID:", userId1);
-const scores =  getScoresByUserId(userId1);
-console.log(scores);
-      
-
-//==========================================================================================================================================================================================
-
-
-
-  
       document.getElementById("username").textContent = userName;
 
       document.getElementById("logoutBtn").addEventListener("click", () => {
         localStorage.clear();
-        window.location.href = "https://krrishcoder.github.io/quizappy/index.html"; // or login.html
+        window.location.href = "/index.html"; // or login.html
       });
 
-     
-
-
-
-
-
-
-
       // Fetch performances
-      // Fetch performances
-async function fetchPerformance() {
-  try {
-    const scores = await getScoresByUserId(userId1); // fetch fresh scores
-    const tbody = document.getElementById("performanceBody");
-    tbody.innerHTML = "";
+      async function fetchPerformance() {
+        try {
+          const scores = await getScoresByUserId(userId); // fetch fresh scores
+          const tbody = document.getElementById("performanceBody");
+          tbody.innerHTML = "";
 
-    if (!scores || scores.length === 0) {
-      document.getElementById("totalQuizzes").textContent = "0";
-      document.getElementById("avgScore").textContent = "0.0";
-      document.getElementById("maxScore").textContent = "0";
+          if (!scores || scores.length === 0) {
+            document.getElementById("totalQuizzes").textContent = "0";
+            document.getElementById("avgScore").textContent = "0.0";
+            document.getElementById("maxScore").textContent = "0";
 
-      tbody.innerHTML = `<tr>
-        <td colspan="5" class="text-center py-6 text-gray-500">
-          You haven’t taken any quiz yet. Come on, start testing your skills now!
-        </td>
-      </tr>`;
-      return;
-    }
+            tbody.innerHTML = `<tr>
+              <td colspan="5" class="text-center py-6 text-gray-500">
+                You haven’t taken any quiz yet. Come on, start testing your skills now!
+              </td>
+            </tr>`;
+            return;
+          }
 
-    // Stats summary
-    document.getElementById("totalQuizzes").textContent = scores.length;
-    const totalScore = scores.reduce((sum, q) => sum + q.score, 0);
-    const maxScore = Math.max(...scores.map((q) => q.score));
-    document.getElementById("avgScore").textContent = (totalScore / scores.length).toFixed(1);
-    document.getElementById("maxScore").textContent = maxScore;
+          // Stats summary
+          document.getElementById("totalQuizzes").textContent = scores.length;
+          const totalScore = scores.reduce((sum, q) => sum + q.score, 0);
+          const maxScore = Math.max(...scores.map((q) => q.score));
+          document.getElementById("avgScore").textContent = (totalScore / scores.length).toFixed(1);
+          document.getElementById("maxScore").textContent = maxScore;
 
-    // Store for viewQuestions
-    window.quizData = scores;
+          // Store for viewQuestions
+          window.quizData = scores;
 
-    scores.forEach((quiz, index) => {
-      const tr = document.createElement("tr");
-      tr.classList.add("border-b");
+          scores.forEach((quiz, index) => {
+            const tr = document.createElement("tr");
+            tr.classList.add("border-b");
 
-      const difficultyClass = {
-        easy: "text-green-600 font-semibold",
-        medium: "text-yellow-600 font-semibold",
-        hard: "text-red-600 font-semibold",
-      };
+            const difficultyClass = {
+              easy: "text-green-600 font-semibold",
+              medium: "text-yellow-600 font-semibold",
+              hard: "text-red-600 font-semibold",
+            };
 
-      tr.innerHTML = `
-        <td class="py-2 px-3">${quiz.topic}</td>
-        <td class="py-2 px-3">${quiz.score} / ${quiz.total}</td>
-        <td class="py-2 px-3 ${difficultyClass[quiz.difficulty.toLowerCase()] || ""}">
-          ${quiz.difficulty}
-        </td>
-        <td class="py-2 px-3">${new Date(quiz.datetime).toLocaleString()}</td>
-        <td class="py-2 px-3">
-          <button onclick="viewQuestions(${index})" class="text-blue-600 hover:underline text-sm">View</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (err) {
-    console.error("Failed to fetch performance:", err);
-  }
-}
+            tr.innerHTML = `
+              <td class="py-2 px-3">${quiz.topic}</td>
+              <td class="py-2 px-3">${quiz.score} / ${quiz.total}</td>
+              <td class="py-2 px-3 ${difficultyClass[quiz.difficulty.toLowerCase()] || ""}">
+                ${quiz.difficulty}
+              </td>
+              <td class="py-2 px-3">${new Date(quiz.datetime).toLocaleString()}</td>
+              <td class="py-2 px-3">
+                <button onclick="viewQuestions(${index})" class="text-blue-600 hover:underline text-sm">View</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error("Failed to fetch performance:", err);
+        }
+      }
 
+      // Fetch leaderboard data
+      async function fetchLeaderboard() {
+        try {
+          const response = await fetch(`http://localhost:3000/api/leaderboard`);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
 
+          const leaderboard = await response.json();
+          const tbody = document.getElementById("leaderboardBody");
+          tbody.innerHTML = "";
 
+          if (!leaderboard || leaderboard.length === 0) {
+            tbody.innerHTML = `<tr>
+              <td colspan="4" class="text-center py-6 text-gray-500">
+                No leaderboard data available.
+              </td>
+            </tr>`;
+            return;
+          }
+
+          leaderboard.forEach(entry => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td class="py-2 px-3">${entry.topic}</td>
+              <td class="py-2 px-3">${entry.user}</td>
+              <td class="py-2 px-3">${entry.score}</td>
+              <td class="py-2 px-3">${new Date(entry.date).toLocaleString()}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error("Failed to fetch leaderboard:", err);
+        }
+      }
 
       function viewQuestions(index) {
         const questions = window.quizData[index].questions || [];
@@ -240,8 +275,8 @@ async function fetchPerformance() {
       }
 
       fetchPerformance();
+      fetchLeaderboard(); // Fetch leaderboard data
 
-      
     </script>
   </body>
 </html>
